@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAJDLS Closet Digital App</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'app-pink': '#FF69B4', // Hot Pink
+            },
+            keyframes: {
+              'pulse-slow': {
+                '0%, 100%': { opacity: 1 },
+                '50%': { opacity: 0.5 },
+              }
+            },
+            animation: {
+              'pulse-slow': 'pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        /* Ensures the app stays mobile-sized in a browser */
+        .mobile-wrapper {
+            max-width: 420px;
+            height: 800px; /* Simulated mobile height */
+            margin: 0 auto;
+            overflow-y: hidden; /* Managed by component view */
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div id="root" class="mobile-wrapper bg-white shadow-2xl rounded-xl"></div>
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+        const appPink = 'app-pink'; 
+
+        // --- Mock Data ---
+        const initialCloset = [
+            { id: 1, name: "White Cropped Tee", category: "Tops", price: 25.00, img: "tee" },
+            { id: 2, name: "Denim High-Rise Jeans", category: "Bottoms", price: 55.00, img: "jeans" },
+            { id: 3, name: "Pink Knit Cardigan", category: "Outerwear", price: 70.00, img: "cardigan" },
+        ];
+        
+        const initialWishlist = [
+            { id: 4, name: "Lavender Cropped Cardigan", price: 55.00, img: "cardigan" },
+            { id: 5, name: "Platform Sneakers", price: 89.99, img: "sneakers" },
+        ];
+
+        // --- Navigation Setup ---
+        const TABS = [
+            { id: 'scan', label: 'Scan', icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z' }, // Camera/Home icon
+            { id: 'inventory', label: 'Closet', icon: 'M5 8h14M5 8a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V10a2 2 0 00-2-2H5z' }, // Closet icon
+            { id: 'cart', label: 'Cart', icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4.4M15 20a1 1 0 11-2 0 1 1 0 012 0zm-8 0a1 1 0 11-2 0 1 1 0 012 0z' }, // Cart icon
+        ];
+
+        // --- Component Definitions ---
+
+        // Reusable Icon Component
+        const TabIcon = ({ path, isActive }) => (
+            <svg className={`h-6 w-6 transition-colors ${isActive ? `text-${appPink}` : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={path} />
+            </svg>
+        );
+
+        // Bottom Navigation Bar
+        const NavigationBar = ({ activeTab, setActiveTab }) => (
+            <div className="fixed bottom-0 left-0 right-0 max-w-[420px] mx-auto bg-white border-t-2 border-app-pink/50 shadow-2xl z-10">
+                <div className="flex justify-around py-2">
+                    {TABS.map((item) => {
+                        const isActive = activeTab === item.id;
+                        return (
+                            <button 
+                                key={item.id}
+                                onClick={() => setActiveTab(item.id)}
+                                className="flex flex-col items-center justify-center p-2 text-sm font-medium transition-transform transform hover:scale-105"
+                            >
+                                <TabIcon path={item.icon} isActive={isActive} />
+                                <span className={`mt-1 transition-colors ${isActive ? `text-${appPink}` : 'text-gray-500'}`}>{item.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+
+        // --- 1. Scan Screen ---
+        const ScanScreen = ({ setView }) => (
+            <div className="p-6 h-full overflow-y-auto pb-24">
+                <h1 className="text-3xl font-bold text-gray-800 mt-4">Hello, MAJDLS!</h1>
+                <p className="text-gray-600 mt-2">Ready to find your next look? Use the Body Scanner to get the perfect fit and style recommendation!</p>
+
+                {/* Body Scanner Card */}
+                <div className="mt-8 p-6 bg-app-pink/10 rounded-2xl border-4 border-app-pink/50 text-center">
+                    <div className="w-24 h-24 mx-auto mb-4 bg-app-pink/30 rounded-full flex items-center justify-center animation-pulse-slow">
+                        <svg className={`h-12 w-12 text-${appPink}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                             <path d="M3 12l2-2m0 0l2-2m-2 2h18M3 12l2 2m0 0l2 2m-2-2h18" />
+                        </svg>
+                    </div>
+                    <p className="text-lg font-semibold text-gray-700 mb-4">Tap to start Body Scan</p>
+                    <button 
+                        className={`w-full py-3 text-white bg-${appPink} rounded-xl font-bold shadow-lg hover:bg-pink-700 transition duration-300`}
+                        onClick={() => alert("Simulating Body Scan...")}
+                    >
+                        Capture Scan
+                    </button>
+                </div>
+                
+                {/* Quick Links */}
+                <h3 className="text-xl font-bold text-gray-800 mt-8 mb-4">Quick Links</h3>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white rounded-xl shadow-md border-b-4 border-app-pink/60 transition hover:shadow-lg cursor-pointer" onClick={() => alert("Go to New Arrivals")}>
+                        <p className="font-semibold text-gray-800">New Arrivals</p>
+                        <p className={`text-sm text-${appPink} mt-1`}>Shop the latest trends!</p>
+                    </div>
+                    <div className="p-4 bg-white rounded-xl shadow-md border-b-4 border-app-pink/60 transition hover:shadow-lg cursor-pointer" onClick={() => alert("View Measurements")}>
+                        <p className="font-semibold text-gray-800">My Measurements</p>
+                        <p className={`text-sm text-${appPink} mt-1`}>View size profile</p>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // --- 2. Inventory Screen ---
+        const InventoryScreen = ({ items }) => {
+            const categories = ['Tops', 'Bottoms', 'Outerwear', 'Dresses', 'Shoes', 'Accessories'];
+            
+            return (
+                <div className="p-6 h-full overflow-y-auto pb-24">
+                    <h2 className="text-3xl font-bold text-gray-800 mt-4 mb-6">Your Closet</h2>
+                    
+                    <div className="grid grid-cols-3 gap-3">
+                        {categories.map((category) => {
+                            const count = items.filter(item => item.category === category).length;
+                            return (
+                                <div 
+                                    key={category} 
+                                    className={`p-3 rounded-xl text-center shadow-lg border-2 border-${appPink}/20 transition hover:shadow-xl cursor-pointer`}
+                                    style={{ backgroundColor: category === 'Tops' || category === 'Dresses' ? '#FFE8F2' : '#FFFFFF' }}
+                                    onClick={() => alert(`Showing ${category} (${count} items)`)}
+                                >
+                                    <p className={`text-lg font-bold text-${appPink}`}>{category.split(' ')[0]}</p>
+                                    <p className="text-xs text-gray-600 mt-1">{category} ({count})</p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    
+                    {/* Stylist Link Moved Here */}
+                    <div className="mt-8 p-4 bg-white rounded-xl shadow-md border-b-4 border-app-pink/60 transition hover:shadow-lg cursor-pointer" onClick={() => alert("Simulating AI Style Analysis...")}>
+                        <p className="font-semibold text-gray-800">🪄 AI Style Analysis</p>
+                        <p className={`text-sm text-${appPink} mt-1`}>Tap to get outfit ideas and recommendations.</p>
+                    </div>
+
+                    <h3 className="text-xl font-bold text-gray-800 mt-8 mb-4 border-b-2 pb-2">All Items ({items.length})</h3>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        {items.map(item => (
+                            <div key={item.id} className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-100 transition hover:shadow-lg">
+                                {/* Placeholder Image */}
+                                <div className={`h-32 bg-gray-200 flex items-center justify-center text-gray-500 font-semibold text-sm rounded-t-lg`} style={{ backgroundColor: '#F0F0F0' }}>
+                                    
+                                </div>
+                                <div className="p-3">
+                                    <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
+                                    <p className={`text-xs text-${appPink}`}>{item.category}</p>
+                                    <button 
+                                        className="mt-2 text-xs font-medium text-red-500 hover:text-red-700"
+                                        onClick={() => alert(`Remove ${item.name}`)}
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                </div>
+            );
+        };
+
+        // --- 3. Cart Screen ---
+        const CartScreen = ({ items, removeItem }) => {
+            const subtotal = items.reduce((sum, item) => sum + item.price, 0);
+            const shipping = items.length > 0 ? 7.99 : 0;
+            const total = subtotal + shipping;
+
+            return (
+                <div className="p-6 h-full overflow-y-auto pb-24">
+                    <h2 className="text-3xl font-bold text-gray-800 mt-4 mb-6">Shopping Cart 🛍️</h2>
+                    
+                    {items.length === 0 ? (
+                        <div className="p-8 bg-gray-100 rounded-xl text-center">
+                            <p className="text-lg text-gray-600 font-semibold">Your Cart is Empty!</p>
+                            <p className="text-sm text-gray-500 mt-2">Check out the New Arrivals for inspiration.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {/* Item List */}
+                            <ul className="space-y-3">
+                                {items.map(item => (
+                                    <li key={item.id} className="flex items-center p-3 bg-white rounded-xl shadow-sm border border-gray-100">
+                                        {/* Placeholder Image */}
+                                        <div className="w-12 h-12 bg-gray-200 rounded-lg mr-4"></div>
+                                        <div className="flex-1">
+                                            <p className="font-semibold text-gray-800">{item.name}</p>
+                                            <p className="text-sm text-gray-600">${item.price.toFixed(2)}</p>
+                                        </div>
+                                        <button 
+                                            className="ml-4 text-xs font-semibold text-red-500 hover:text-red-700 transition"
+                                            onClick={() => removeItem(item.id)}
+                                        >
+                                            Remove
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+
+                            {/* Summary */}
+                            <div className="p-4 bg-app-pink/10 rounded-xl space-y-2 border border-app-pink/30">
+                                <h3 className="text-lg font-bold text-gray-700">Order Summary</h3>
+                                <div className="flex justify-between text-sm text-gray-600">
+                                    <span>Subtotal:</span>
+                                    <span>${subtotal.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-gray-600">
+                                    <span>Shipping:</span>
+                                    <span>${shipping.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between pt-2 border-t border-gray-300">
+                                    <span className="font-bold text-lg text-gray-800">Total:</span>
+                                    <span className={`font-bold text-lg text-${appPink}`}>${total.toFixed(2)}</span>
+                                </div>
+                            </div>
+
+                            {/* Checkout Button */}
+                            <button 
+                                className={`w-full py-3 text-white bg-${appPink} rounded-xl font-bold shadow-lg hover:bg-pink-700 transition duration-300`}
+                                onClick={() => alert(`Proceeding to pay $${total.toFixed(2)}`)}
+                            >
+                                Checkout Now
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+
+        // --- Main App Component ---
+
+        const DigitalClosetApp = () => {
+            const [activeTab, setActiveTab] = useState('scan');
+            const [closetItems, setClosetItems] = useState(initialCloset);
+            const [wishlistItems, setWishlistItems] = useState(initialWishlist);
+
+            const removeWishlistItem = (id) => {
+                setWishlistItems(prev => prev.filter(item => item.id !== id));
+            };
+
+            const renderScreen = () => {
+                switch (activeTab) {
+                    case 'scan':
+                        return <ScanScreen />;
+                    case 'inventory':
+                        return <InventoryScreen items={closetItems} />;
+                    case 'cart':
+                        return <CartScreen items={wishlistItems} removeItem={removeWishlistItem} />;
+                    default:
+                        return <ScanScreen />;
+                }
+            };
+
+            return (
+              <div className="h-full flex flex-col justify-between">
+                
+                {/* Header */}
+                <header className="p-4 flex justify-between items-center border-b border-gray-200">
+                    <h1 className="text-xl font-extrabold text-gray-800">MAJDLS Closet</h1>
+                    {/* User Profile / Settings Icon */}
+                    <div className="w-8 h-8 bg-app-pink rounded-full flex items-center justify-center text-white font-bold text-sm cursor-pointer" onClick={() => alert('Settings')}>D</div>
+                </header>
+
+                {/* Main Content Area */}
+                <div className="flex-grow overflow-y-auto mb-16">
+                    {renderScreen()}
+                </div>
+
+                {/* Navigation Bar */}
+                <NavigationBar activeTab={activeTab} setActiveTab={setActiveTab} />
+              </div>
+            );
+        };
+        
+        // Render the component
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DigitalClosetApp />);
+    </script>
+</body>
+</html>
